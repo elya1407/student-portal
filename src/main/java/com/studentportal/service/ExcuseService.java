@@ -4,25 +4,20 @@ import com.studentportal.model.Excuse;
 import com.studentportal.model.Student;
 import com.studentportal.repository.ExcuseRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class ExcuseService {
     private final ExcuseRepository excuseRepository;
-    private final Path uploadDir;
+    private final FileStorageService fileStorageService;
 
-    public ExcuseService(ExcuseRepository excuseRepository, @Value("${app.upload-dir:uploads}") String uploadDir) {
+    public ExcuseService(ExcuseRepository excuseRepository, FileStorageService fileStorageService) {
         this.excuseRepository = excuseRepository;
-        this.uploadDir = Path.of(uploadDir);
+        this.fileStorageService = fileStorageService;
     }
 
     public List<Excuse> forStudent(Student student) {
@@ -46,7 +41,8 @@ public class ExcuseService {
         excuse.setComment(comment);
 
         if (file != null && !file.isEmpty()) {
-            attachFile(excuse, file);
+            excuse.setFileName(fileStorageService.originalNameOf(file));
+            excuse.setFileUrl(fileStorageService.store(file));
         }
         return excuseRepository.save(excuse);
     }
@@ -54,30 +50,5 @@ public class ExcuseService {
     @Transactional
     public void delete(Long id) {
         excuseRepository.deleteById(id);
-    }
-
-    private void attachFile(Excuse excuse, MultipartFile file) {
-        try {
-            Files.createDirectories(uploadDir);
-            String originalName = file.getOriginalFilename() == null ? "file" : Path.of(file.getOriginalFilename()).getFileName().toString();
-            String safeName = sanitizeFileName(originalName);
-            String savedName = UUID.randomUUID() + "_" + safeName;
-            Path target = uploadDir.resolve(savedName);
-            file.transferTo(target);
-            excuse.setFileName(originalName);
-            excuse.setFileUrl("/uploads/" + savedName);
-        } catch (IOException e) {
-            throw new IllegalStateException("Не удалось загрузить файл справки", e);
-        }
-    }
-
-    private String sanitizeFileName(String originalName) {
-        String dotless = originalName.replaceAll("[\\\\/]", "_");
-        String safe = dotless.replaceAll("[^A-Za-z0-9._-]", "_");
-        safe = safe.replaceAll("_+", "_");
-        if (safe.isBlank() || safe.equals(".") || safe.equals("_")) {
-            safe = "file";
-        }
-        return safe;
     }
 }

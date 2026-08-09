@@ -1,8 +1,7 @@
 package com.studentportal.controller;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
+import com.studentportal.model.StoredFile;
+import com.studentportal.repository.StoredFileRepository;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -10,44 +9,41 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 
+/**
+ * Отдаёт файлы, загруженные через сайт (аватары, справки, вложения к постам).
+ * Файлы хранятся в базе данных (таблица stored_files) — не на диске сервера,
+ * поэтому переживают перезапуск/засыпание контейнера на бесплатном хостинге.
+ */
 @Controller
 public class FileDownloadController {
 
-    @Value("${app.upload-dir:uploads}")
-    private String uploadDir;
+    private final StoredFileRepository storedFileRepository;
 
-    @GetMapping("/uploads/{filename:.+}")
-    public ResponseEntity<Resource> download(@PathVariable String filename) {
-        Path base = Path.of(uploadDir).toAbsolutePath().normalize();
-        Path target = base.resolve(filename).normalize();
+    public FileDownloadController(StoredFileRepository storedFileRepository) {
+        this.storedFileRepository = storedFileRepository;
+    }
 
-        // защита от выхода за пределы папки uploads через ../
-        if (!target.startsWith(base)) {
-            return ResponseEntity.badRequest().build();
-        }
-
-        if (!Files.exists(target) || !Files.isRegularFile(target)) {
+    @GetMapping("/files/{id}")
+    public ResponseEntity<byte[]> download(@PathVariable Long id) {
+        StoredFile file = storedFileRepository.findById(id).orElse(null);
+        if (file == null) {
             return ResponseEntity.notFound().build();
         }
 
-        Resource resource = new FileSystemResource(target);
-        String contentType;
+        MediaType mediaType;
         try {
-            contentType = Files.probeContentType(target);
-        } catch (IOException e) {
-            contentType = null;
-        }
-        if (contentType == null) {
-            contentType = "application/octet-stream";
+            mediaType = MediaType.parseMediaType(file.getContentType());
+        } catch (Exception e) {
+            mediaType = MediaType.APPLICATION_OCTET_STREAM;
         }
 
+        String encodedName = java.net.URLEncoder.encode(file.getOriginalName(), StandardCharsets.UTF_8).replace("+", "%20");
+
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                .body(resource);
+                .contentType(mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedName)
+                .body(file.getData());
     }
 }

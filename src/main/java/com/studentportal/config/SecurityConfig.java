@@ -63,7 +63,7 @@ public class SecurityConfig {
         http
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/uploads/**", "/api/**", "/h2-console/**").permitAll()
+                        .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/files/**", "/api/**", "/h2-console/**").permitAll()
                         .anyRequest().hasRole("STUDENT")
                 )
                 .formLogin(form -> form

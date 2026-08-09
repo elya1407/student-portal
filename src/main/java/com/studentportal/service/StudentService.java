@@ -6,29 +6,24 @@ import com.studentportal.dto.RegisterRequest;
 import com.studentportal.model.Student;
 import com.studentportal.repository.StudentRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class StudentService {
     private final StudentRepository studentRepository;
     private final PasswordEncoder passwordEncoder;
-    private final Path uploadDir;
+    private final FileStorageService fileStorageService;
 
     public StudentService(StudentRepository studentRepository, PasswordEncoder passwordEncoder,
-                          @Value("${app.upload-dir:uploads}") String uploadDir) {
+                          FileStorageService fileStorageService) {
         this.studentRepository = studentRepository;
         this.passwordEncoder = passwordEncoder;
-        this.uploadDir = Path.of(uploadDir);
+        this.fileStorageService = fileStorageService;
     }
 
     public Student findByRecordBook(String recordBookNumber) {
@@ -161,19 +156,8 @@ public class StudentService {
         if (contentType == null || !contentType.startsWith("image/")) {
             throw new IllegalArgumentException("Аватар должен быть изображением (jpg, png, webp)");
         }
-        try {
-            Files.createDirectories(uploadDir);
-            String originalName = file.getOriginalFilename() == null ? "avatar" : Path.of(file.getOriginalFilename()).getFileName().toString();
-            String ext = originalName.contains(".") ? originalName.substring(originalName.lastIndexOf('.')) : "";
-            String safeExt = ext.replaceAll("[^A-Za-z0-9.]", "");
-            String savedName = "avatar_" + student.getId() + "_" + UUID.randomUUID() + safeExt;
-            Path target = uploadDir.resolve(savedName);
-            file.transferTo(target);
-            student.setAvatarUrl("/uploads/" + savedName);
-            studentRepository.save(student);
-        } catch (IOException e) {
-            throw new IllegalStateException("Не удалось загрузить аватар", e);
-        }
+        student.setAvatarUrl(fileStorageService.store(file));
+        studentRepository.save(student);
     }
 
     @Transactional
