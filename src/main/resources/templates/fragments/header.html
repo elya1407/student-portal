@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav th:fragment="studentNav" class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/dashboard}"><span class="brand-dot"></span> electric60341</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#studentNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="studentNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
+                <li class="nav-item"><a class="nav-link" th:href="@{/dashboard}"><i class="bi bi-speedometer2 me-1"></i>Кабинет</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/schedule}"><i class="bi bi-calendar-week me-1"></i>Расписание</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/attendance}"><i class="bi bi-check2-circle me-1"></i>Посещаемость</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/excuses}"><i class="bi bi-file-earmark-medical me-1"></i>Справки</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/posts}"><i class="bi bi-megaphone me-1"></i>Объявления</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/profile}">
+                    <img th:if="${student != null and student.avatarUrl != null}" th:src="@{${student.avatarUrl}}" class="avatar-circle me-1" alt="avatar" style="width:24px;height:24px;">
+                    <i th:if="${student == null or student.avatarUrl == null}" class="bi bi-person-circle me-1"></i>Профиль</a></li>
+            </ul>
+            <form th:action="@{/logout}" method="post" class="d-flex">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button class="btn btn-outline-secondary btn-sm" type="submit"><i class="bi bi-box-arrow-right me-1"></i>Выйти</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<nav th:fragment="adminNav" class="navbar navbar-expand-lg navbar-dark admin-navbar sticky-top">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/admin}"><i class="bi bi-shield-lock-fill me-1"></i>Админка electric60341</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="adminNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
+                <li class="nav-item"><a class="nav-link" th:href="@{/admin}"><i class="bi bi-house me-1"></i>Главная</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/admin/students}"><i class="bi bi-people me-1"></i>Студенты</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/admin/schedule}"><i class="bi bi-calendar-week me-1"></i>Расписание</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/admin/attendance}"><i class="bi bi-check2-circle me-1"></i>Посещаемость</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/admin/posts}"><i class="bi bi-megaphone me-1"></i>Объявления</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/admin/excuses}"><i class="bi bi-file-earmark-medical me-1"></i>Справки</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/admin/export/students}"><i class="bi bi-file-earmark-excel me-1"></i>Excel студенты</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/admin/export/attendance}"><i class="bi bi-file-earmark-excel me-1"></i>Excel отметки</a></li>
+            </ul>
+            <form th:action="@{/admin/logout}" method="post" class="d-flex">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button class="btn btn-light btn-sm" type="submit"><i class="bi bi-box-arrow-right me-1"></i>Выйти</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div th:fragment="alerts" class="container mt-3">
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+</div>
+
+<footer th:fragment="footer" class="py-4 mt-5 border-top text-center text-muted small">
+    <div class="container">Студенческий портал 603-41 · Политехнический институт</div>
+</footer>
+</body>
+</html>

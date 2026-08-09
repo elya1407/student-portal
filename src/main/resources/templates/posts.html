@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Объявления</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body th:class="'theme-' + ${student.themeColor}">
+<div th:replace="~{fragments/header :: studentNav}"></div>
+<main class="container py-4">
+    <h1 class="h3 fw-bold mb-4"><i class="bi bi-megaphone text-primary me-1"></i>Объявления</h1>
+    <div class="row g-3">
+        <div th:each="post : ${posts}" class="col-12">
+            <article class="soft-card p-4">
+                <div class="d-flex justify-content-between flex-wrap gap-2">
+                    <h2 class="h5 fw-bold" th:text="${post.title}"></h2>
+                    <span class="badge text-bg-light" th:text="${post.forSubgroup == null ? 'для всех' : 'п/г ' + post.forSubgroup}"></span>
+                </div>
+                <p class="text-muted small mb-2"><span th:text="${#temporals.format(post.createdAt, 'dd.MM.yyyy HH:mm')}"></span> · <span th:text="${post.createdBy}"></span></p>
+                <p class="mb-3" th:text="${post.content}"></p>
+                <a th:if="${post.fileUrl != null}" class="btn btn-outline-primary btn-sm" th:href="@{${post.fileUrl}}" th:text="'Скачать: ' + ${post.fileName}"></a>
+            </article>
+        </div>
+        <div th:if="${#lists.isEmpty(posts)}" class="col-12">
+            <div class="alert alert-light border">Объявлений пока нет.</div>
+        </div>
+    </div>
+</main>
+<div th:replace="~{fragments/header :: footer}"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
